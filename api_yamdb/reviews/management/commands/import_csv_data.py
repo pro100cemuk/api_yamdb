@@ -4,7 +4,8 @@ import os
 from django.core.management.base import BaseCommand, CommandError
 
 from api_yamdb.settings import BASE_DIR
-from reviews.models import Comments, Reviews, Titles, User
+from reviews.models import (Category, Comments, Genre, Reviews, TitleGenre,
+                            Titles, User)
 
 
 class Command(BaseCommand):
@@ -16,12 +17,18 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         obj = {
             'users.csv': User,
-            'category.csv': object(),
-            'genre.csv': object(),
+            'category.csv': Category,
+            'genre.csv': Genre,
             'titles.csv': Titles,
-            'genre_title.csv': object(),
+            'genre_title.csv': TitleGenre,
             'review.csv': Reviews,
             'comments.csv': Comments
+        }
+        foreign_key = {
+            'category': [Category, 'category'],
+            'title_id': [Titles, 'title'],
+            'genre_id': [Genre, 'genre'],
+            'author': [User, 'author'],
         }
         dir_data = os.path.join(BASE_DIR, "static/data")
         for file_csv in options['files']:
@@ -32,10 +39,17 @@ class Command(BaseCommand):
                 print(full_fn)
                 with open(full_fn, 'r', newline='', encoding='utf-8') as csvf:
                     reader = csv.DictReader(csvf)
-                    list_obj = list(
-                        obj[file_csv](**kwargs)
-                        for kwargs in reader
-                    )
+                    list_obj = list()
+                    for dict_now in reader:
+                        kwargs = dict()
+                        for key, val in dict_now.items():
+                            if key in foreign_key:
+                                key_new = foreign_key[key][1]
+                                val_new = foreign_key[key][0](id=val)
+                                kwargs[key_new] = val_new
+                            else:
+                                kwargs[key] = val
+                        list_obj.append(obj[file_csv](**kwargs))
                     obj[file_csv].objects.bulk_create(list_obj)
             except OSError:
                 raise CommandError('File "%s" does not exist' % file_csv)
