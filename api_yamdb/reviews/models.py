@@ -45,7 +45,6 @@ class User(AbstractUser):
         return self.role == 'user'
 
 
-
 class Category(models.Model):
     name = models.CharField('Название', max_length=256)
     slug = models.SlugField(
@@ -79,10 +78,6 @@ class Genre(models.Model):
 class Titles(models.Model):
     name = models.CharField('Название', max_length=256)
     year = models.IntegerField('Год выпуска')
-    rating = models.IntegerField(
-        'Рейтинг',
-        default=None
-    )
     description = models.TextField('Описание')
     genre = models.ManyToManyField(
         Genre,
