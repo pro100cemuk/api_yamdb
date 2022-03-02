@@ -45,8 +45,71 @@ class User(AbstractUser):
         return self.role == 'user'
 
 
+
+class Category(models.Model):
+    name = models.CharField('Название', max_length=256)
+    slug = models.SlugField(
+        'Slug категории',
+        max_length=50,
+        unique=True
+    )
+
+    class Meta:
+        verbose_name = 'Категория'
+
+    def __str__(self):
+        return self.slug
+
+
+class Genre(models.Model):
+    name = models.CharField('Название', max_length=256)
+    slug = models.SlugField(
+        'Slug жанра',
+        max_length=50,
+        unique=True
+    )
+
+    class Meta:
+        verbose_name = 'Жанр'
+
+    def __str__(self):
+        return self.slug
+
+
 class Titles(models.Model):
-    ...
+    name = models.CharField('Название', max_length=256)
+    year = models.IntegerField('Год выпуска')
+    rating = models.IntegerField(
+        'Рейтинг',
+        default=None
+    )
+    description = models.TextField('Описание')
+    genre = models.ManyToManyField(
+        Genre,
+        through='TitleGenre',
+        related_name='title',
+        verbose_name='Жанры'
+    )
+    category = models.ForeignKey(
+        Category,
+        on_delete=models.PROTECT,
+        related_name='title',
+        verbose_name='Категория'
+    )
+
+    class Meta:
+        verbose_name = 'Произведение'
+
+    def __str__(self):
+        return self.name[:20]
+
+
+class TitleGenre(models.Model):
+    title = models.ForeignKey(Titles, on_delete=models.CASCADE)
+    genre = models.ForeignKey(Genre, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return f'{self.title} {self.genre}'
 
 
 class Reviews(models.Model):
