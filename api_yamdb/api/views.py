@@ -7,10 +7,10 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 
 from api_yamdb.settings import ADMIN_EMAIL
-from reviews.models import User
 from .permissions import IsRoleAdmin
 from .serializers import (AdminUserSerializer, SignupSerializer,
                           TokenSerializer, UserSerializer)
+from reviews.models import User
 
 
 class UserViewSet(viewsets.ModelViewSet):
@@ -44,12 +44,24 @@ class UserViewSet(viewsets.ModelViewSet):
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def signup(request):
-    serializer = SignupSerializer(data=request.data)
-    if serializer.is_valid():
+    email = request.data.get('email')
+    username = request.data.get('username')
+    if not User.objects.filter(email=email, username=username).exists():
+        serializer = SignupSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(serializer.errors,
+                            status=status.HTTP_400_BAD_REQUEST)
         user = serializer.save()
         send_confirmation_code(user)
         return Response(serializer.data, status=status.HTTP_200_OK)
-    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    serializer = UserSerializer(data=request.data)
+    if not serializer.is_valid():
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    email = serializer.data['email']
+    username = serializer.data['username']
+    user = get_object_or_404(User, username=username, email=email)
+    send_confirmation_code(user)
+    return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 @api_view(['POST'])
@@ -65,7 +77,7 @@ def token(request):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     token = user.token
     return Response(
-        {'access': str(token)}, status=status.HTTP_200_OK
+        {'token': str(token)}, status=status.HTTP_200_OK
     )
 
 
