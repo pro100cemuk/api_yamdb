@@ -3,7 +3,7 @@ from rest_framework import routers
 
 from .views import UserViewSet, signup, token
 
-v1=routers.DefaultRouter()
+v1 = routers.DefaultRouter()
 v1.register('users', UserViewSet, basename='users')
 
 urlpatterns = [

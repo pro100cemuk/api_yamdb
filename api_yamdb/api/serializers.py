@@ -21,6 +21,7 @@ class UserSerializer(serializers.ModelSerializer):
             )
         return value
 
+
 class AdminUserSerializer(serializers.ModelSerializer):
 
     class Meta:
