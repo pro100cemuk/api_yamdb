@@ -1,6 +1,9 @@
-from django.db import models
-from django.core.validators import MaxValueValidator, MinValueValidator
 from django.contrib.auth.models import AbstractUser
+from django.core.validators import MaxValueValidator, MinValueValidator
+from django.db import models
+import jwt
+
+from api_yamdb import settings
 
 ROLE_CHOICES = (
     ('user', 'Пользователь'),
@@ -10,6 +13,7 @@ ROLE_CHOICES = (
 
 
 class User(AbstractUser):
+    first_name = models.CharField(max_length=150, blank=True)
     email = models.EmailField(
         max_length=254,
         unique=True,
@@ -20,8 +24,8 @@ class User(AbstractUser):
         verbose_name='Биография'
     )
     role = models.CharField(
+        max_length=30,
         choices=ROLE_CHOICES,
-        max_length=256,
         default='user',
         verbose_name='Роль'
     )
@@ -31,6 +35,12 @@ class User(AbstractUser):
 
     def __str__(self):
         return self.username
+
+    def _generate_jwt_token(self):
+        token = jwt.encode({
+            'id': self.pk
+        }, settings.SECRET_KEY, algorithm='HS256')
+        return token.decode('utf-8')
 
     @property
     def is_admin(self):
@@ -78,10 +88,6 @@ class Genre(models.Model):
 class Titles(models.Model):
     name = models.CharField('Название', max_length=256)
     year = models.IntegerField('Год выпуска')
-    rating = models.IntegerField(
-        'Рейтинг',
-        default=None
-    )
     description = models.TextField('Описание')
     genre = models.ManyToManyField(
         Genre,

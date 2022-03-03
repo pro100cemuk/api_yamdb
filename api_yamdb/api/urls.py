@@ -1,14 +1,16 @@
 from django.urls import include, path
 from rest_framework import routers
 
-from api.views import CategoryViewSet, GenreViewSet, TitlesViewSet
+from .views import UserViewSet, signup, token, CategoryViewSet, GenreViewSet, TitlesViewSet
 
-router_v1 = routers.DefaultRouter()
-router_v1.register('categories', CategoryViewSet, basename='categories')
-router_v1.register('genres', GenreViewSet, basename='genres')
-router_v1.register('titles', TitlesViewSet, basename='titles')
+v1 = routers.DefaultRouter()
+v1.register('users', UserViewSet, basename='users')
+v1.register('categories', CategoryViewSet, basename='categories')
+v1.register('genres', GenreViewSet, basename='genres')
+v1.register('titles', TitlesViewSet, basename='titles')
 
 urlpatterns = [
-    path('v1/', include(router_v1.urls)),
-    path('v1/', include('djoser.urls.jwt'))
+    path('v1/', include(v1.urls)),
+    path('v1/auth/signup/', signup, name='signup'),
+    path('v1/auth/token/', token, name='token')
 ]
