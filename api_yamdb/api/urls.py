@@ -17,5 +17,5 @@ v1.register(
 urlpatterns = [
     path('v1/', include(v1.urls)),
     path('v1/auth/signup/', signup, name='signup'),
-    path('v1/auth/token/', token, name='token')
+    path('v1/auth/token/', token, name='token'),
 ]

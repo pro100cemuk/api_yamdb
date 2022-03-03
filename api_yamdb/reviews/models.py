@@ -1,9 +1,12 @@
 from django.contrib.auth.models import AbstractUser
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
+
+from datetime import datetime, timedelta
 import jwt
 
 from api_yamdb import settings
+
 
 ROLE_CHOICES = (
     ('user', 'Пользователь'),
@@ -41,8 +44,10 @@ class User(AbstractUser):
         return self._generate_jwt_token()
 
     def _generate_jwt_token(self):
+        dt = datetime.now() + timedelta(days=1)
         token = jwt.encode({
-            'id': self.pk
+            'id': self.pk,
+            'exp': int(dt.strftime('%s'))
         }, settings.SECRET_KEY, algorithm='HS256')
         return token
 
