@@ -78,14 +78,8 @@ class GenreSerializer(serializers.ModelSerializer):
 
 
 class TitlesSerializer(serializers.ModelSerializer):
-    category = serializers.SlugRelatedField(
-        queryset=Category.objects.all(),
-        slug_field='slug'
-    )
-    genre = serializers.SlugRelatedField(
-        queryset=Genre.objects.all(),
-        slug_field='slug'
-    )
+    category = CategorySerializer()
+    genre = GenreSerializer(many=True)
 
     class Meta:
         model = Titles
