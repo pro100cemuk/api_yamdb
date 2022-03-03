@@ -40,6 +40,7 @@ class UserViewSet(viewsets.ModelViewSet):
             return Response(serializer.data, status=status.HTTP_200_OK)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
+
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def signup(request):
@@ -49,6 +50,7 @@ def signup(request):
         send_confirmation_code(user)
         return Response(serializer.data, status=status.HTTP_200_OK)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
@@ -61,10 +63,11 @@ def token(request):
     confirmation_code = serializer.data['confirmation_code']
     if not default_token_generator.check_token(user, confirmation_code):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    token = user._generate_jwt_token()
+    token = user.token
     return Response(
-        {'token': str(token.access_token)}, status=status.HTTP_200_OK
+        {'access': str(token)}, status=status.HTTP_200_OK
     )
+
 
 def send_confirmation_code(user):
     confirmation_code = default_token_generator.make_token(user)

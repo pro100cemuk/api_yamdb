@@ -26,7 +26,6 @@ class User(AbstractUser):
     role = models.CharField(
         max_length=30,
         choices=ROLE_CHOICES,
-        max_length=15,
         default='user',
         verbose_name='Роль'
     )
@@ -37,11 +36,15 @@ class User(AbstractUser):
     def __str__(self):
         return self.username
 
+    @property
+    def token(self):
+        return self._generate_jwt_token()
+
     def _generate_jwt_token(self):
         token = jwt.encode({
             'id': self.pk
         }, settings.SECRET_KEY, algorithm='HS256')
-        return token.decode('utf-8')
+        return token
 
     @property
     def is_admin(self):
