@@ -1,5 +1,8 @@
+import jwt
 from django.db import models
 from django.contrib.auth.models import AbstractUser
+
+from api_yamdb import settings
 
 ROLE_CHOICES = (
     ('user', 'Пользователь'),
@@ -9,6 +12,7 @@ ROLE_CHOICES = (
 
 
 class User(AbstractUser):
+    first_name = models.CharField(max_length=150, blank=True)
     email = models.EmailField(
         max_length=254,
         unique=True,
@@ -19,6 +23,7 @@ class User(AbstractUser):
         verbose_name='Биография'
     )
     role = models.CharField(
+        max_length=30,
         choices=ROLE_CHOICES,
         default='user',
         verbose_name='Роль'
@@ -29,6 +34,12 @@ class User(AbstractUser):
 
     def __str__(self):
         return self.username
+
+    def _generate_jwt_token(self):
+        token = jwt.encode({
+            'id': self.pk
+        }, settings.SECRET_KEY, algorithm='HS256')
+        return token.decode('utf-8')
 
     @property
     def is_admin(self):

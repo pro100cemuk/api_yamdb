@@ -132,4 +132,4 @@ SIMPLE_JWT = {
     'AUTH_HEADER_TYPES': ('Bearer',),
 }
 
-ADMIN_EMAIL = 'Admin@yamdb.test'
+ADMIN_EMAIL = 'Admin@yamdb.fake'
