@@ -8,11 +8,6 @@ v1.register('users', UserViewSet, basename='users')
 v1.register('categories', CategoryViewSet, basename='categories')
 v1.register('genres', GenreViewSet, basename='genres')
 v1.register('titles', TitlesViewSet, basename='titles')
-v1.register(
-    r'categories/(?P<slug>\d+)/',
-    CategoryViewSet,
-    basename='category_delete'
-)
 
 urlpatterns = [
     path('v1/', include(v1.urls)),
