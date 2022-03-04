@@ -1,8 +1,9 @@
 import datetime as dt
+
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
 
-from reviews.models import User, Category, Genre, Titles
+from reviews.models import Category, Comments, Genre, Reviews, Titles, User
 
 User = get_user_model()
 
@@ -118,6 +119,6 @@ class CommentsSerializer(serializers.ModelSerializer):
     )
 
     class Meta:
-        model = Reviews
+        model = Comments
         fields = ('id', 'text', 'author', 'pub_date')
         read_only_fields = ('pub_date', )

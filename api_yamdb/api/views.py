@@ -1,10 +1,10 @@
-from django_filters.rest_framework import DjangoFilterBackend
+from django.contrib.auth import get_user_model
 from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import send_mail
-from django.contrib.auth import get_user_model
 from django.http import Http404
 from django.shortcuts import get_object_or_404
-from rest_framework import filters, permissions, status, viewsets, mixins
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework import filters, mixins, permissions, status, viewsets
 from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.permissions import AllowAny, IsAuthenticated
@@ -14,9 +14,11 @@ from api_yamdb.settings import ADMIN_EMAIL
 from reviews.models import Category, Genre, Reviews, Titles
 
 from .permissions import IsRoleAdmin, ReadOnly
-from .serializers import (AdminUserSerializer, CommentsSerializer, SignupSerializer,
-                          TokenSerializer, UserSerializer, ReviewsSerializer,
-                          CategorySerializer, GenreSerializer, TitlesSerializer)
+from .serializers import (AdminUserSerializer, CategorySerializer,
+                          CommentsSerializer, GenreSerializer,
+                          ReviewsSerializer, SignupSerializer,
+                          TitlesSerializer, TokenSerializer, UserSerializer)
+
 User = get_user_model()
 
 
@@ -95,7 +97,6 @@ def send_confirmation_code(user):
     admin_email = ADMIN_EMAIL
     user_email = [user.email]
     return send_mail(subject, message, admin_email, user_email)
-
 
 
 class ListCreateDestroyViewSet(
@@ -197,4 +198,3 @@ class CommentsViewSet(viewsets.ModelViewSet):
         if review.title.pk != int(self.kwargs.get('title_id')):
             raise Http404('No corresponding object exists')
         return review.comments.all()
-

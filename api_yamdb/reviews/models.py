@@ -50,7 +50,6 @@ class User(AbstractUser):
             algorithm='HS256'
         )
 
-
     @property
     def is_admin(self):
         return self.role == 'admin'
