@@ -39,18 +39,6 @@ class User(AbstractUser):
         return self.username
 
     @property
-    def token(self):
-        return self._generate_jwt_token()
-
-    def _generate_jwt_token(self):
-        dt = datetime.now() + timedelta(days=1)
-        return jwt.encode(
-            {'id': self.pk, 'exp': dt},
-            settings.SECRET_KEY,
-            algorithm='HS256'
-        )
-
-    @property
     def is_admin(self):
         return self.role == 'admin'
 
@@ -75,7 +63,7 @@ class Category(models.Model):
         verbose_name = 'Категория'
 
     def __str__(self):
-        return self.slug
+        return f'{self.name} {self.name}'
 
 
 class Genre(models.Model):
@@ -90,7 +78,7 @@ class Genre(models.Model):
         verbose_name = 'Жанр'
 
     def __str__(self):
-        return self.slug
+        return f'{self.name} {self.name}'
 
 
 class Titles(models.Model):
@@ -152,7 +140,16 @@ class Reviews(models.Model):
     )
 
     class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=['author', 'title'],
+                name='unique review')
+        ]
         verbose_name = 'Отзыв'
+        verbose_name_plural = 'Отзывы'
+
+    def __str__(self):
+        return self.text
 
 
 class Comments(models.Model):

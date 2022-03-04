@@ -9,14 +9,16 @@ from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
+from rest_framework_simplejwt.tokens import AccessToken
 
 from api_yamdb.settings import ADMIN_EMAIL
 from reviews.models import Category, Genre, Reviews, Titles
 
-from .permissions import IsRoleAdmin, ReadOnly
+from .permissions import (IsAuthorOrReadOnly, IsRoleAdmin, IsRoleModerator,
+                          ReadOnly)
 from .serializers import (AdminUserSerializer, CategorySerializer,
                           CommentsSerializer, GenreSerializer,
-                          ReviewsSerializer, SignupSerializer,
+                          ReviewsSerializer, SignupSerializer, TitlesCreateSerializer,
                           TitlesSerializer, TokenSerializer, UserSerializer)
 
 User = get_user_model()
@@ -84,7 +86,7 @@ def token(request):
     confirmation_code = serializer.data['confirmation_code']
     if not default_token_generator.check_token(user, confirmation_code):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    token = user.token
+    token = AccessToken.for_user(user)
     return Response(
         {'token': str(token)}, status=status.HTTP_200_OK
     )
@@ -108,7 +110,7 @@ class ListCreateDestroyViewSet(
     pass
 
 
-class CategoryViewSet(ListCreateDestroyViewSet):
+class CategoryViewSet(viewsets.ModelViewSet):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
     permission_classes = (IsRoleAdmin,)
@@ -116,55 +118,58 @@ class CategoryViewSet(ListCreateDestroyViewSet):
     search_fields = ('^name',)
     pagination_class = LimitOffsetPagination
 
-    def get_permissions(self):
-        if self.action == 'list':
-            return (ReadOnly(),)
-        return super().get_permissions()
+    @action(
+        detail=False, methods=['delete'],
+        url_path=r'(?P<slug>\w+)',
+        lookup_field='slug', url_name='category_slug'
+    )
+    def get_category(self, request, slug):
+        category = self.get_object()
+        serializer = CategorySerializer(category)
+        category.delete()
+        return Response(serializer.data, status=status.HTTP_204_NO_CONTENT)
 
 
-class GenreViewSet(ListCreateDestroyViewSet):
+class GenreViewSet(viewsets.ModelViewSet):
     queryset = Genre.objects.all()
     serializer_class = GenreSerializer
-    permission_classes = (IsRoleAdmin,)
+    permission_classes = (IsRoleAdmin | ReadOnly,)
     filter_backends = (filters.SearchFilter,)
     search_fields = ('^name',)
     pagination_class = LimitOffsetPagination
 
-    def get_permissions(self):
-        if self.action == 'list':
-            return (ReadOnly(),)
-        return super().get_permissions()
+    @action(
+        detail=False, methods=['delete'],
+        url_path=r'(?P<slug>\w+)',
+        lookup_field='slug', url_name='category_slug'
+    )
+    def get_genre(self, request, slug):
+        category = self.get_object()
+        serializer = CategorySerializer(category)
+        category.delete()
+        return Response(serializer.data, status=status.HTTP_204_NO_CONTENT)
 
 
-class TitlesViewSet(
-    mixins.ListModelMixin,
-    mixins.CreateModelMixin,
-    mixins.RetrieveModelMixin,
-    mixins.DestroyModelMixin,
-    mixins.UpdateModelMixin,
-    viewsets.GenericViewSet
-):
+class TitlesViewSet(viewsets.ModelViewSet):
     queryset = Titles.objects.all()
     serializer_class = TitlesSerializer
-    permission_classes = (IsRoleAdmin,)
+    permission_classes = (IsRoleAdmin | ReadOnly,)
     filter_backends = (DjangoFilterBackend,)
     filterset_fields = ('category', 'genre', 'name', 'year')
     pagination_class = LimitOffsetPagination
 
-    def get_permissions(self):
-        if (
-            self.action == 'retrieve'
-            or self.action == 'list'
-        ):
-            return (ReadOnly(),)
-        return super().get_permissions()
+    def get_serializer_class(self):
+        if self.request.method in ('POST', 'PATCH',):
+            return TitlesCreateSerializer
+        return TitlesSerializer
 
 
 class ReviewsViewSet(viewsets.ModelViewSet):
     serializer_class = ReviewsSerializer
-    permission_classes = [
-        permissions.IsAuthenticatedOrReadOnly,
-    ]
+    permission_classes = (
+        IsRoleAdmin | IsRoleModerator | IsAuthorOrReadOnly,
+    )
+
 
     def perform_create(self, serializer):
         title = get_object_or_404(Titles, pk=int(self.kwargs.get('title_id')))
@@ -177,17 +182,17 @@ class ReviewsViewSet(viewsets.ModelViewSet):
 
 class CommentsViewSet(viewsets.ModelViewSet):
     serializer_class = CommentsSerializer
-    permission_classes = [
-        permissions.IsAuthenticatedOrReadOnly,
-    ]
+    permission_classes = (
+        IsRoleAdmin | IsRoleModerator | IsAuthorOrReadOnly,
+    )
 
     def perform_create(self, serializer):
         review = get_object_or_404(
             Reviews,
             pk=int(self.kwargs.get('review_id'))
         )
-        if review.title.pk != int(self.kwargs.get('title_id')):
-            raise Http404('No corresponding object exists')
+        # if review.title.pk != int(self.kwargs.get('title_id')):
+        #     raise Http404('No corresponding object exists')
         serializer.save(author=self.request.user, review=review)
 
     def get_queryset(self):
@@ -195,6 +200,6 @@ class CommentsViewSet(viewsets.ModelViewSet):
             Reviews,
             pk=int(self.kwargs.get('review_id'))
         )
-        if review.title.pk != int(self.kwargs.get('title_id')):
-            raise Http404('No corresponding object exists')
+        # if review.title.pk != int(self.kwargs.get('title_id')):
+        #     raise Http404('No corresponding object exists')
         return review.comments.all()
