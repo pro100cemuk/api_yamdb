@@ -1,8 +1,10 @@
 import datetime as dt
-
+from django.contrib.auth import get_user_model
 from rest_framework import serializers
 
 from reviews.models import User, Category, Genre, Titles
+
+User = get_user_model()
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -91,3 +93,31 @@ class TitlesSerializer(serializers.ModelSerializer):
                 'Нельзя добавлять произведения, которые еще не вышли.'
             )
         return data
+
+
+class ReviewsSerializer(serializers.ModelSerializer):
+
+    author = serializers.SlugRelatedField(
+        read_only=True,
+        slug_field='username',
+        default=serializers.CurrentUserDefault()
+    )
+
+    class Meta:
+        model = Reviews
+        fields = ('id', 'text', 'author', 'score', 'pub_date')
+        read_only_fields = ('pub_date', )
+
+
+class CommentsSerializer(serializers.ModelSerializer):
+
+    author = serializers.SlugRelatedField(
+        read_only=True,
+        slug_field='username',
+        default=serializers.CurrentUserDefault()
+    )
+
+    class Meta:
+        model = Reviews
+        fields = ('id', 'text', 'author', 'pub_date')
+        read_only_fields = ('pub_date', )
