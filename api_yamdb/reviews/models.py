@@ -1,12 +1,11 @@
+from datetime import datetime, timedelta
+
+import jwt
 from django.contrib.auth.models import AbstractUser
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 
-from datetime import datetime, timedelta
-import jwt
-
 from api_yamdb import settings
-
 
 ROLE_CHOICES = (
     ('user', 'Пользователь'),
@@ -45,11 +44,11 @@ class User(AbstractUser):
 
     def _generate_jwt_token(self):
         dt = datetime.now() + timedelta(days=1)
-        token = jwt.encode({
-            'id': self.pk,
-            'exp': int(dt.strftime('%s'))
-        }, settings.SECRET_KEY, algorithm='HS256')
-        return token
+        return jwt.encode(
+            {'id': self.pk, 'exp': dt},
+            settings.SECRET_KEY,
+            algorithm='HS256'
+        )
 
     @property
     def is_admin(self):
@@ -130,12 +129,12 @@ class Reviews(models.Model):
     author = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
-        related_name='review'
+        related_name='reviews'
     )
     title = models.ForeignKey(
         Titles,
         on_delete=models.CASCADE,
-        related_name='review'
+        related_name='reviews'
     )
     text = models.TextField()
     score = models.PositiveIntegerField(
