@@ -1,21 +1,22 @@
+from django_filters.rest_framework import DjangoFilterBackend
 from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import send_mail
 from django.contrib.auth import get_user_model
 from django.http import Http404
 from django.shortcuts import get_object_or_404
-from rest_framework import filters, permissions, status, viewsets
+from rest_framework import filters, permissions, status, viewsets, mixins
 from rest_framework.decorators import action, api_view, permission_classes
+from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 
 from api_yamdb.settings import ADMIN_EMAIL
-from reviews.models import Reviews, Titles
+from reviews.models import Category, Genre, Reviews, Titles
 
-from .permissions import IsRoleAdmin
-from .serializers import (AdminUserSerializer, CommentsSerializer,
-                          ReviewsSerializer, SignupSerializer,
-                          TokenSerializer, UserSerializer)
-
+from .permissions import IsRoleAdmin, ReadOnly
+from .serializers import (AdminUserSerializer, CommentsSerializer, SignupSerializer,
+                          TokenSerializer, UserSerializer, ReviewsSerializer,
+                          CategorySerializer, GenreSerializer, TitlesSerializer)
 User = get_user_model()
 
 
@@ -96,6 +97,68 @@ def send_confirmation_code(user):
     return send_mail(subject, message, admin_email, user_email)
 
 
+
+class ListCreateDestroyViewSet(
+    mixins.ListModelMixin,
+    mixins.CreateModelMixin,
+    mixins.DestroyModelMixin,
+    viewsets.GenericViewSet
+):
+    pass
+
+
+class CategoryViewSet(ListCreateDestroyViewSet):
+    queryset = Category.objects.all()
+    serializer_class = CategorySerializer
+    permission_classes = (IsRoleAdmin,)
+    filter_backends = (filters.SearchFilter,)
+    search_fields = ('^name',)
+    pagination_class = LimitOffsetPagination
+
+    def get_permissions(self):
+        if self.action == 'list':
+            return (ReadOnly(),)
+        return super().get_permissions()
+
+
+class GenreViewSet(ListCreateDestroyViewSet):
+    queryset = Genre.objects.all()
+    serializer_class = GenreSerializer
+    permission_classes = (IsRoleAdmin,)
+    filter_backends = (filters.SearchFilter,)
+    search_fields = ('^name',)
+    pagination_class = LimitOffsetPagination
+
+    def get_permissions(self):
+        if self.action == 'list':
+            return (ReadOnly(),)
+        return super().get_permissions()
+
+
+class TitlesViewSet(
+    mixins.ListModelMixin,
+    mixins.CreateModelMixin,
+    mixins.RetrieveModelMixin,
+    mixins.DestroyModelMixin,
+    mixins.UpdateModelMixin,
+    viewsets.GenericViewSet
+):
+    queryset = Titles.objects.all()
+    serializer_class = TitlesSerializer
+    permission_classes = (IsRoleAdmin,)
+    filter_backends = (DjangoFilterBackend,)
+    filterset_fields = ('category', 'genre', 'name', 'year')
+    pagination_class = LimitOffsetPagination
+
+    def get_permissions(self):
+        if (
+            self.action == 'retrieve'
+            or self.action == 'list'
+        ):
+            return (ReadOnly(),)
+        return super().get_permissions()
+
+
 class ReviewsViewSet(viewsets.ModelViewSet):
     serializer_class = ReviewsSerializer
     permission_classes = [
@@ -134,3 +197,4 @@ class CommentsViewSet(viewsets.ModelViewSet):
         if review.title.pk != int(self.kwargs.get('title_id')):
             raise Http404('No corresponding object exists')
         return review.comments.all()
+

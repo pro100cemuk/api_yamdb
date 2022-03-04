@@ -1,7 +1,8 @@
+import datetime as dt
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
 
-from reviews.models import Reviews
+from reviews.models import User, Category, Genre, Titles
 
 User = get_user_model()
 
@@ -62,6 +63,36 @@ class TokenSerializer(serializers.Serializer):
     class Meta:
         model = User
         fields = ('username', 'confirmation_code',)
+
+
+class CategorySerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Category
+        fields = ('name', 'slug')
+
+
+class GenreSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Genre
+        fields = ('name', 'slug')
+
+
+class TitlesSerializer(serializers.ModelSerializer):
+    category = CategorySerializer()
+    genre = GenreSerializer(many=True)
+
+    class Meta:
+        model = Titles
+        fields = '__all__'
+
+    def validate(self, data):
+        if data['year'] > dt.datetime.now().year:
+            raise serializers.ValidationError(
+                'Нельзя добавлять произведения, которые еще не вышли.'
+            )
+        return data
 
 
 class ReviewsSerializer(serializers.ModelSerializer):
