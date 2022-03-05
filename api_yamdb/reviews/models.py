@@ -1,11 +1,6 @@
-from datetime import datetime, timedelta
-
-import jwt
 from django.contrib.auth.models import AbstractUser
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
-
-from api_yamdb import settings
 
 ROLE_CHOICES = (
     ('user', 'Пользователь'),
@@ -81,10 +76,10 @@ class Genre(models.Model):
         return f'{self.name} {self.name}'
 
 
-class Titles(models.Model):
+class Title(models.Model):
     name = models.CharField('Название', max_length=256)
     year = models.IntegerField('Год выпуска')
-    description = models.TextField('Описание')
+    description = models.CharField('Описание', max_length=256)
     genre = models.ManyToManyField(
         Genre,
         through='TitleGenre',
@@ -106,21 +101,21 @@ class Titles(models.Model):
 
 
 class TitleGenre(models.Model):
-    title = models.ForeignKey(Titles, on_delete=models.CASCADE)
+    title = models.ForeignKey(Title, on_delete=models.CASCADE)
     genre = models.ForeignKey(Genre, on_delete=models.CASCADE)
 
     def __str__(self):
         return f'{self.title} {self.genre}'
 
 
-class Reviews(models.Model):
+class Review(models.Model):
     author = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
         related_name='reviews'
     )
     title = models.ForeignKey(
-        Titles,
+        Title,
         on_delete=models.CASCADE,
         related_name='reviews'
     )
@@ -143,7 +138,7 @@ class Reviews(models.Model):
         constraints = [
             models.UniqueConstraint(
                 fields=['author', 'title'],
-                name='unique review')
+                name='unique reviews')
         ]
         verbose_name = 'Отзыв'
         verbose_name_plural = 'Отзывы'
@@ -159,7 +154,7 @@ class Comments(models.Model):
         related_name='comments'
     )
     review = models.ForeignKey(
-        Reviews,
+        Review,
         on_delete=models.CASCADE,
         related_name='comments'
     )

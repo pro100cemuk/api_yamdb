@@ -4,8 +4,8 @@ import os
 from django.core.management.base import BaseCommand, CommandError
 
 from api_yamdb.settings import BASE_DIR
-from reviews.models import (Category, Comments, Genre, Reviews, TitleGenre,
-                            Titles, User)
+from reviews.models import (Category, Comments, Genre, Review, TitleGenre,
+                            Title, User)
 
 
 class Command(BaseCommand):
@@ -19,14 +19,14 @@ class Command(BaseCommand):
             'users.csv': User,
             'category.csv': Category,
             'genre.csv': Genre,
-            'titles.csv': Titles,
+            'titles.csv': Title,
             'genre_title.csv': TitleGenre,
-            'review.csv': Reviews,
+            'review.csv': Review,
             'comments.csv': Comments
         }
         foreign_key = {
             'category': [Category, 'category'],
-            'title_id': [Titles, 'title'],
+            'title_id': [Title, 'title'],
             'genre_id': [Genre, 'genre'],
             'author': [User, 'author'],
         }

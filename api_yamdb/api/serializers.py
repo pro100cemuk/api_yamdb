@@ -4,7 +4,7 @@ from django.contrib.auth import get_user_model
 from django.db.models import Avg
 from rest_framework import serializers
 
-from reviews.models import Category, Comments, Genre, Reviews, Titles, User
+from reviews.models import Category, Comments, Genre, Review, Title, User
 
 User = get_user_model()
 
@@ -90,7 +90,7 @@ class TitlesCreateSerializer(serializers.ModelSerializer):
     )
 
     class Meta:
-        model = Titles
+        model = Title
         fields = '__all__'
 
     def validate_year(self, value):
@@ -108,7 +108,7 @@ class TitlesSerializer(serializers.ModelSerializer):
     genre = GenreSerializer(many=True)
 
     class Meta:
-        model = Titles
+        model = Title
         fields = (
             'id', 'name', 'year', 'rating', 'description', 'genre', 'category'
         )
@@ -129,7 +129,7 @@ class ReviewsSerializer(serializers.ModelSerializer):
     )
 
     class Meta:
-        model = Reviews
+        model = Review
         fields = ('id', 'text', 'author', 'score', 'pub_date')
         read_only_fields = ('pub_date', )
 
@@ -139,7 +139,7 @@ class ReviewsSerializer(serializers.ModelSerializer):
 
         title_id = self.context['view'].kwargs.get('title_id')
         author = self.context['request'].user
-        if Reviews.objects.filter(
+        if Review.objects.filter(
                 author=author, title=title_id).exists():
             raise serializers.ValidationError(
                 'Вы уже написали отзыв к этому произведению.'

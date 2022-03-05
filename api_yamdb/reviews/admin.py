@@ -1,10 +1,12 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 
-from .models import Category, Genre, Titles, User
+from .models import Category, Comments, Genre, Title, User, Review
 
-admin.site.register(User, UserAdmin)
 EMPTY_CONST = '-пусто-'
+admin.site.register(User, UserAdmin)
+admin.site.register(Review)
+admin.site.register(Comments)
 
 
 @admin.register(Category)
@@ -23,14 +25,13 @@ class GenreAdmin(admin.ModelAdmin):
     empty_value_display = EMPTY_CONST
 
 
-@admin.register(Titles)
-class TitlesAdmin(admin.ModelAdmin):
+@admin.register(Title)
+class TitleAdmin(admin.ModelAdmin):
     list_display = (
         'pk',
         'name',
         'description',
         'category',
-        # 'genre',
         'year'
     )
     search_fields = ('year', 'category', 'genre', 'name')

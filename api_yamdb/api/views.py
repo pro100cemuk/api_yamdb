@@ -1,10 +1,9 @@
 from django.contrib.auth import get_user_model
 from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import send_mail
-from django.http import Http404
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import filters, mixins, permissions, status, viewsets
+from rest_framework import filters, status, viewsets
 from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.permissions import AllowAny, IsAuthenticated
@@ -12,14 +11,15 @@ from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import AccessToken
 
 from api_yamdb.settings import ADMIN_EMAIL
-from reviews.models import Category, Genre, Reviews, Titles
-
+from reviews.models import Category, Genre, Review, Title
+from .filters import TitleFilter
 from .permissions import (IsAuthorOrReadOnly, IsRoleAdmin, IsRoleModerator,
                           ReadOnly)
 from .serializers import (AdminUserSerializer, CategorySerializer,
                           CommentsSerializer, GenreSerializer,
-                          ReviewsSerializer, SignupSerializer, TitlesCreateSerializer,
-                          TitlesSerializer, TokenSerializer, UserSerializer)
+                          ReviewsSerializer, SignupSerializer,
+                          TitlesCreateSerializer, TitlesSerializer,
+                          TokenSerializer, UserSerializer)
 
 User = get_user_model()
 
@@ -101,19 +101,10 @@ def send_confirmation_code(user):
     return send_mail(subject, message, admin_email, user_email)
 
 
-class ListCreateDestroyViewSet(
-    mixins.ListModelMixin,
-    mixins.CreateModelMixin,
-    mixins.DestroyModelMixin,
-    viewsets.GenericViewSet
-):
-    pass
-
-
 class CategoryViewSet(viewsets.ModelViewSet):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
-    permission_classes = (IsRoleAdmin,)
+    permission_classes = (IsRoleAdmin | ReadOnly,)
     filter_backends = (filters.SearchFilter,)
     search_fields = ('^name',)
     pagination_class = LimitOffsetPagination
@@ -151,11 +142,11 @@ class GenreViewSet(viewsets.ModelViewSet):
 
 
 class TitlesViewSet(viewsets.ModelViewSet):
-    queryset = Titles.objects.all()
+    queryset = Title.objects.all()
     serializer_class = TitlesSerializer
     permission_classes = (IsRoleAdmin | ReadOnly,)
     filter_backends = (DjangoFilterBackend,)
-    filterset_fields = ('category', 'genre', 'name', 'year')
+    filterset_class = TitleFilter
     pagination_class = LimitOffsetPagination
 
     def get_serializer_class(self):
@@ -170,13 +161,12 @@ class ReviewsViewSet(viewsets.ModelViewSet):
         IsRoleAdmin | IsRoleModerator | IsAuthorOrReadOnly,
     )
 
-
     def perform_create(self, serializer):
-        title = get_object_or_404(Titles, pk=int(self.kwargs.get('title_id')))
+        title = get_object_or_404(Title, pk=int(self.kwargs.get('title_id')))
         serializer.save(author=self.request.user, title=title)
 
     def get_queryset(self):
-        title = get_object_or_404(Titles, pk=int(self.kwargs.get('title_id')))
+        title = get_object_or_404(Title, pk=int(self.kwargs.get('title_id')))
         return title.reviews.all()
 
 
@@ -188,18 +178,14 @@ class CommentsViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         review = get_object_or_404(
-            Reviews,
+            Review,
             pk=int(self.kwargs.get('review_id'))
         )
-        # if review.title.pk != int(self.kwargs.get('title_id')):
-        #     raise Http404('No corresponding object exists')
         serializer.save(author=self.request.user, review=review)
 
     def get_queryset(self):
         review = get_object_or_404(
-            Reviews,
+            Review,
             pk=int(self.kwargs.get('review_id'))
         )
-        # if review.title.pk != int(self.kwargs.get('title_id')):
-        #     raise Http404('No corresponding object exists')
         return review.comments.all()
