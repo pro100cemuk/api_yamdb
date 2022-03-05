@@ -1,11 +1,6 @@
-from datetime import datetime, timedelta
-
-import jwt
 from django.contrib.auth.models import AbstractUser
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
-
-from api_yamdb import settings
 
 ROLE_CHOICES = (
     ('user', 'Пользователь'),
@@ -39,18 +34,6 @@ class User(AbstractUser):
         return self.username
 
     @property
-    def token(self):
-        return self._generate_jwt_token()
-
-    def _generate_jwt_token(self):
-        dt = datetime.now() + timedelta(days=1)
-        return jwt.encode(
-            {'id': self.pk, 'exp': dt},
-            settings.SECRET_KEY,
-            algorithm='HS256'
-        )
-
-    @property
     def is_admin(self):
         return self.role == 'admin'
 
@@ -75,7 +58,7 @@ class Category(models.Model):
         verbose_name = 'Категория'
 
     def __str__(self):
-        return self.slug
+        return f'{self.name} {self.name}'
 
 
 class Genre(models.Model):
@@ -90,13 +73,13 @@ class Genre(models.Model):
         verbose_name = 'Жанр'
 
     def __str__(self):
-        return self.slug
+        return f'{self.name} {self.name}'
 
 
-class Titles(models.Model):
+class Title(models.Model):
     name = models.CharField('Название', max_length=256)
     year = models.IntegerField('Год выпуска')
-    description = models.TextField('Описание')
+    description = models.CharField('Описание', max_length=256)
     genre = models.ManyToManyField(
         Genre,
         through='TitleGenre',
@@ -118,21 +101,21 @@ class Titles(models.Model):
 
 
 class TitleGenre(models.Model):
-    title = models.ForeignKey(Titles, on_delete=models.CASCADE)
+    title = models.ForeignKey(Title, on_delete=models.CASCADE)
     genre = models.ForeignKey(Genre, on_delete=models.CASCADE)
 
     def __str__(self):
         return f'{self.title} {self.genre}'
 
 
-class Reviews(models.Model):
+class Review(models.Model):
     author = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
         related_name='reviews'
     )
     title = models.ForeignKey(
-        Titles,
+        Title,
         on_delete=models.CASCADE,
         related_name='reviews'
     )
@@ -152,7 +135,16 @@ class Reviews(models.Model):
     )
 
     class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=['author', 'title'],
+                name='unique reviews')
+        ]
         verbose_name = 'Отзыв'
+        verbose_name_plural = 'Отзывы'
+
+    def __str__(self):
+        return self.text
 
 
 class Comments(models.Model):
@@ -162,7 +154,7 @@ class Comments(models.Model):
         related_name='comments'
     )
     review = models.ForeignKey(
-        Reviews,
+        Review,
         on_delete=models.CASCADE,
         related_name='comments'
     )
