@@ -141,9 +141,11 @@ class GenreViewSet(viewsets.ModelViewSet):
         genre.delete()
         return Response(serializer.data, status=status.HTTP_204_NO_CONTENT)
 
+
 class Round0(Func):
     function = 'ROUND'
-    template='%(function)s(%(expressions)s, 0)'
+    template = '%(function)s(%(expressions)s, 0)'
+
 
 class TitlesViewSet(viewsets.ModelViewSet):
     queryset = Title.objects.all()
