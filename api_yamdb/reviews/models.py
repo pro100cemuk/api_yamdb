@@ -29,6 +29,7 @@ class User(AbstractUser):
 
     class Meta:
         verbose_name = 'Пользователь'
+        verbose_name_plural = 'Пользователи'
 
     def __str__(self):
         return self.username
@@ -56,6 +57,7 @@ class Category(models.Model):
 
     class Meta:
         verbose_name = 'Категория'
+        verbose_name_plural = 'Категории'
 
     def __str__(self):
         return f'{self.name} {self.slug}'
@@ -71,6 +73,7 @@ class Genre(models.Model):
 
     class Meta:
         verbose_name = 'Жанр'
+        verbose_name_plural = 'Жанры'
 
     def __str__(self):
         return f'{self.name} {self.slug}'
@@ -95,6 +98,7 @@ class Title(models.Model):
 
     class Meta:
         verbose_name = 'Произведение'
+        verbose_name_plural = 'Произведения'
 
     def __str__(self):
         return self.name[:20]
@@ -167,3 +171,4 @@ class Comments(models.Model):
 
     class Meta:
         verbose_name = 'Комментарий'
+        verbose_name_plural = 'Комментарии'
