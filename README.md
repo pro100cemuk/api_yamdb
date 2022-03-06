@@ -58,7 +58,7 @@ python manage.py runserver
 ```
 Для импорта данных введите команду:
 ```
-python manage.py import_csv_data category.csv comments.csv genre.csv genre_title.csv review.csv titles.csv users.csv
+py manage.py import_csv_data users.csv category.csv genre.csv titles.csv genre_title.csv review.csv comments.csv
 ```
 ## Документация API YaMDB
 После запуска проекта вам будет доступна документация проекта по адресу http://127.0.0.1:8000/redoc/, где описано, как работает проект, и представлены примеры доступных запросов.
