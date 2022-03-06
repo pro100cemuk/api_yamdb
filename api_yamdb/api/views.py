@@ -188,13 +188,15 @@ class CommentsViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         review = get_object_or_404(
             Review,
-            pk=int(self.kwargs.get('review_id'))
+            pk=int(self.kwargs.get('review_id')),
+            title__id=int(self.kwargs.get('title_id'))
         )
         serializer.save(author=self.request.user, review=review)
 
     def get_queryset(self):
         review = get_object_or_404(
             Review,
-            pk=int(self.kwargs.get('review_id'))
+            pk=int(self.kwargs.get('review_id')),
+            title__id=int(self.kwargs.get('title_id'))
         )
         return review.comments.all()
