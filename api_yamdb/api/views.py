@@ -1,7 +1,7 @@
 from django.contrib.auth import get_user_model
 from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import send_mail
-from django.db.models import Avg
+from django.db.models import Avg, Func
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, status, viewsets
@@ -141,6 +141,9 @@ class GenreViewSet(viewsets.ModelViewSet):
         genre.delete()
         return Response(serializer.data, status=status.HTTP_204_NO_CONTENT)
 
+class Round0(Func):
+    function = 'ROUND'
+    template='%(function)s(%(expressions)s, 0)'
 
 class TitlesViewSet(viewsets.ModelViewSet):
     queryset = Title.objects.all()
@@ -156,7 +159,7 @@ class TitlesViewSet(viewsets.ModelViewSet):
         return TitlesSerializer
 
     def get_queryset(self):
-        return Title.objects.annotate(total_rating=Avg('reviews__score'))
+        return Title.objects.annotate(rating=Round0(Avg('reviews__score')))
 
 
 class ReviewsViewSet(viewsets.ModelViewSet):

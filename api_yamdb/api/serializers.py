@@ -103,7 +103,7 @@ class TitlesCreateSerializer(serializers.ModelSerializer):
 
 
 class TitlesSerializer(serializers.ModelSerializer):
-    rating = serializers.DecimalField(read_only=True, decimal_places=1 , max_digits=None)
+    rating = serializers.IntegerField(read_only=True)
     category = CategorySerializer()
     genre = GenreSerializer(many=True)
 
