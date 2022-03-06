@@ -1,6 +1,7 @@
 from django.contrib.auth import get_user_model
 from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import send_mail
+from django.db.models import Avg
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, status, viewsets
@@ -153,6 +154,9 @@ class TitlesViewSet(viewsets.ModelViewSet):
         if self.request.method in ('POST', 'PATCH',):
             return TitlesCreateSerializer
         return TitlesSerializer
+
+    def get_queryset(self):
+        return Title.objects.annotate(total_rating=Avg('reviews__score'))
 
 
 class ReviewsViewSet(viewsets.ModelViewSet):

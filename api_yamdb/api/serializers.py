@@ -103,21 +103,15 @@ class TitlesCreateSerializer(serializers.ModelSerializer):
 
 
 class TitlesSerializer(serializers.ModelSerializer):
-    rating = serializers.SerializerMethodField()
+    rating = serializers.DecimalField(read_only=True, decimal_places=1 , max_digits=None)
     category = CategorySerializer()
     genre = GenreSerializer(many=True)
 
     class Meta:
         model = Title
         fields = (
-            'id', 'name', 'year', 'rating', 'description', 'genre', 'category'
+            'id', 'name', 'year', 'rating', 'description', 'genre', 'category',
         )
-
-    def get_rating(self, obj):
-        rating = obj.reviews.aggregate(Avg('score')).get('score__avg')
-        if not rating:
-            return rating
-        return round(rating, 1)
 
 
 class ReviewsSerializer(serializers.ModelSerializer):
