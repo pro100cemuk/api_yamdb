@@ -125,8 +125,6 @@ class Review(models.Model):
     )
     text = models.TextField()
     score = models.PositiveIntegerField(
-        null=False,
-        blank=False,
         validators=[
             MinValueValidator(1, message='Оценка должна быть > 0!'),
             MaxValueValidator(10, message='Оценка должна быть <= 10')
