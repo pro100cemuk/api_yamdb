@@ -43,13 +43,13 @@ class UserViewSet(viewsets.ModelViewSet):
     )
     def about_me(self, request):
         serializer = UserSerializer(request.user)
-        if request.method == 'PATCH':
-            serializer = UserSerializer(
-                request.user, data=request.data, partial=True
-            )
-            serializer.is_valid(raise_exception=True)
-            serializer.save()
+        if not request.method == 'PATCH':
             return Response(serializer.data, status=status.HTTP_200_OK)
+        serializer = UserSerializer(
+            request.user, data=request.data, partial=True
+        )
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
@@ -69,8 +69,8 @@ def signup(request):
     serializer = UserSerializer(data=request.data)
     if not serializer.is_valid():
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    email = serializer.data['email']
-    username = serializer.data['username']
+    email = serializer.validated_data.get('email')
+    username = serializer.validated_data.get('username')
     user = get_object_or_404(User, username=username, email=email)
     send_confirmation_code(user)
     return Response(serializer.data, status=status.HTTP_200_OK)
@@ -82,9 +82,9 @@ def token(request):
     serializer = TokenSerializer(data=request.data)
     if not serializer.is_valid():
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    username = serializer.data['username']
+    username = serializer.validated_data.get('username')
     user = get_object_or_404(User, username=username)
-    confirmation_code = serializer.data['confirmation_code']
+    confirmation_code = serializer.validated_data.get('confirmation_code')
     if not default_token_generator.check_token(user, confirmation_code):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     token = AccessToken.for_user(user)
@@ -148,7 +148,7 @@ class Round0(Func):
 
 
 class TitlesViewSet(viewsets.ModelViewSet):
-    queryset = Title.objects.all()
+    queryset = Title.objects.annotate(rating=Round0(Avg('reviews__score')))
     serializer_class = TitlesSerializer
     permission_classes = (IsRoleAdmin | ReadOnly,)
     filter_backends = (DjangoFilterBackend,)
@@ -159,9 +159,6 @@ class TitlesViewSet(viewsets.ModelViewSet):
         if self.request.method in ('POST', 'PATCH',):
             return TitlesCreateSerializer
         return TitlesSerializer
-
-    def get_queryset(self):
-        return Title.objects.annotate(rating=Round0(Avg('reviews__score')))
 
 
 class ReviewsViewSet(viewsets.ModelViewSet):
