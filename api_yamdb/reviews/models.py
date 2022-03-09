@@ -1,3 +1,5 @@
+import datetime as dt
+
 from django.contrib.auth.models import AbstractUser
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
@@ -86,7 +88,16 @@ class Genre(models.Model):
 
 class Title(models.Model):
     name = models.CharField('Название', max_length=256)
-    year = models.IntegerField('Год выпуска')
+    current_year = dt.datetime.now().year
+    year = models.PositiveIntegerField(
+        validators=[
+            MinValueValidator(1, message='Год выпуска должен быть выше 1.'),
+            MaxValueValidator(
+                current_year,
+                message='Год выпуска должен быть не выше текущего.'
+            )
+        ]
+    )
     description = models.CharField('Описание', max_length=256)
     genre = models.ManyToManyField(
         Genre,
