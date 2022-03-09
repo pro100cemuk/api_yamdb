@@ -8,7 +8,18 @@ from reviews.models import Category, Comments, Genre, Review, Title, User
 User = get_user_model()
 
 
-class UserSerializer(serializers.ModelSerializer):
+class NotMeUsernameSerializer(serializers.ModelSerializer):
+    pass
+
+    def validate_username(self, value):
+        if value == 'me':
+            raise serializers.ValidationError(
+                'Имя пользователя me не допустимо'
+            )
+        return value
+
+
+class UserSerializer(NotMeUsernameSerializer):
     username = serializers.CharField(required=True)
     email = serializers.CharField(required=True)
     role = serializers.StringRelatedField(read_only=True)
@@ -19,15 +30,8 @@ class UserSerializer(serializers.ModelSerializer):
             'username', 'email', 'first_name', 'last_name', 'bio', 'role',
         )
 
-    def validate_username(self, value):
-        if value == 'me':
-            raise serializers.ValidationError(
-                'Имя пользователя me не допустимо'
-            )
-        return value
 
-
-class AdminUserSerializer(serializers.ModelSerializer):
+class AdminUserSerializer(NotMeUsernameSerializer):
 
     class Meta:
         model = User
@@ -35,26 +39,12 @@ class AdminUserSerializer(serializers.ModelSerializer):
             'username', 'email', 'first_name', 'last_name', 'bio', 'role',
         )
 
-    def validate_username(self, value):
-        if value == 'me':
-            raise serializers.ValidationError(
-                'Имя пользователя me не допустимо'
-            )
-        return value
 
-
-class SignupSerializer(serializers.ModelSerializer):
+class SignupSerializer(NotMeUsernameSerializer):
 
     class Meta:
         model = User
         fields = ('username', 'email',)
-
-    def validate_username(self, value):
-        if value == 'me':
-            raise serializers.ValidationError(
-                'Имя пользователя me не допустимо'
-            )
-        return value
 
 
 class TokenSerializer(serializers.Serializer):
