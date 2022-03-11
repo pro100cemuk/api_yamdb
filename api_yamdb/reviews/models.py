@@ -3,6 +3,7 @@ import datetime as dt
 from django.contrib.auth.models import AbstractUser
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
+from api.validators import validate_username, validate_year
 
 
 class UserRole:
@@ -17,6 +18,11 @@ class UserRole:
 
 
 class User(AbstractUser):
+    username = models.CharField(
+        max_length=150,
+        unique=True,
+        validators=[validate_username]
+    )
     first_name = models.CharField(max_length=150, blank=True)
     email = models.EmailField(
         max_length=254,
@@ -95,7 +101,7 @@ class Title(models.Model):
             MaxValueValidator(
                 current_year,
                 message='Год выпуска должен быть не выше текущего.'
-            )
+            ), validate_year
         ]
     )
     description = models.CharField('Описание', max_length=256)
