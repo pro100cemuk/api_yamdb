@@ -1,27 +1,16 @@
-import datetime as dt
-
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
+from rest_framework.validators import UniqueValidator
 
 from reviews.models import Category, Comments, Genre, Review, Title, User
+from api.validators import validate_username
 
 User = get_user_model()
 
 
-class NotMeUsernameSerializer(serializers.ModelSerializer):
-    pass
-
-    def validate_username(self, value):
-        if value == 'me':
-            raise serializers.ValidationError(
-                'Имя пользователя me не допустимо'
-            )
-        return value
-
-
-class UserSerializer(NotMeUsernameSerializer):
+class UserSerializer(serializers.ModelSerializer):
     username = serializers.CharField(required=True)
-    email = serializers.CharField(required=True)
+    email = serializers.EmailField(required=True)
     role = serializers.StringRelatedField(read_only=True)
 
     class Meta:
@@ -31,8 +20,7 @@ class UserSerializer(NotMeUsernameSerializer):
         )
 
 
-class AdminUserSerializer(NotMeUsernameSerializer):
-
+class AdminUserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = (
@@ -40,14 +28,28 @@ class AdminUserSerializer(NotMeUsernameSerializer):
         )
 
 
-class SignupSerializer(NotMeUsernameSerializer):
+class SignupSerializer(serializers.Serializer):
+    username = serializers.CharField(required=True,
+                                     validators=[
+                                         UniqueValidator(
+                                             queryset=User.objects.all()
+                                         ), validate_username,
+                                     ]
+                                     )
+    email = serializers.EmailField(required=True,
+                                   validators=[
+                                       UniqueValidator(
+                                           queryset=User.objects.all()
+                                       )
+                                   ]
+                                   )
 
     class Meta:
         model = User
         fields = ('username', 'email',)
 
 
-class TokenSerializer(serializers.Serializer):
+class TokenSerializer(serializers.ModelSerializer):
     username = serializers.CharField(required=True)
     confirmation_code = serializers.CharField(required=True)
 
@@ -57,14 +59,12 @@ class TokenSerializer(serializers.Serializer):
 
 
 class CategorySerializer(serializers.ModelSerializer):
-
     class Meta:
         model = Category
         fields = ('name', 'slug')
 
 
 class GenreSerializer(serializers.ModelSerializer):
-
     class Meta:
         model = Genre
         fields = ('name', 'slug')
@@ -82,14 +82,6 @@ class TitlesCreateSerializer(serializers.ModelSerializer):
         model = Title
         fields = '__all__'
 
-    def validate_year(self, value):
-        current_year = dt.datetime.now().year
-        if not 0 <= value <= current_year:
-            raise serializers.ValidationError(
-                'Проверьте год создания произведения (должен быть нашей эры).'
-            )
-        return value
-
 
 class TitlesSerializer(serializers.ModelSerializer):
     rating = serializers.IntegerField(read_only=True)
@@ -104,7 +96,6 @@ class TitlesSerializer(serializers.ModelSerializer):
 
 
 class ReviewsSerializer(serializers.ModelSerializer):
-
     author = serializers.SlugRelatedField(
         read_only=True,
         slug_field='username',
@@ -114,7 +105,7 @@ class ReviewsSerializer(serializers.ModelSerializer):
     class Meta:
         model = Review
         fields = ('id', 'text', 'author', 'score', 'pub_date')
-        read_only_fields = ('pub_date', )
+        read_only_fields = ('pub_date',)
 
     def validate(self, data):
         if self.context['request'].method != 'POST':
@@ -138,7 +129,6 @@ class ReviewsSerializer(serializers.ModelSerializer):
 
 
 class CommentsSerializer(serializers.ModelSerializer):
-
     author = serializers.SlugRelatedField(
         read_only=True,
         slug_field='username',
@@ -148,4 +138,4 @@ class CommentsSerializer(serializers.ModelSerializer):
     class Meta:
         model = Comments
         fields = ('id', 'text', 'author', 'pub_date')
-        read_only_fields = ('pub_date', )
+        read_only_fields = ('pub_date',)
