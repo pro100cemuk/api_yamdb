@@ -4,7 +4,7 @@ from django.core.mail import send_mail
 from django.db.models import Avg, Func
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import filters, serializers, status, viewsets
+from rest_framework import filters, serializers, status, viewsets, mixins
 from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.permissions import AllowAny, IsAuthenticated
@@ -95,44 +95,39 @@ def send_confirmation_code(user):
     return send_mail(subject, message, admin_email, user_email)
 
 
-class CategoryViewSet(viewsets.ModelViewSet):
+class ListCreateDestroy(
+    mixins.ListModelMixin,
+    mixins.CreateModelMixin,
+    mixins.DestroyModelMixin,
+    viewsets.GenericViewSet
+):
+    permission_classes = [IsRoleAdmin | ReadOnly]
+    filter_backends = (filters.SearchFilter,)
+    search_fields = ('^name',)
+    pagination_class = LimitOffsetPagination
+
+    @action(
+        detail=False, methods=['delete'],
+        url_path=r'(?P<slug>\w+)',
+        lookup_field='slug'
+    )
+    def get_genre_or_category(self, request, slug):
+        object = self.get_object()
+        if object is Genre:
+            serializer = GenreSerializer(object)
+        serializer = CategorySerializer(object)
+        object.delete()
+        return Response(serializer.data, status=status.HTTP_204_NO_CONTENT)
+
+
+class CategoryViewSet(ListCreateDestroy):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
-    permission_classes = [IsRoleAdmin | ReadOnly]
-    filter_backends = (filters.SearchFilter,)
-    search_fields = ('^name',)
-    pagination_class = LimitOffsetPagination
-
-    @action(
-        detail=False, methods=['delete'],
-        url_path=r'(?P<slug>\w+)',
-        lookup_field='slug', url_name='category_slug'
-    )
-    def get_category(self, request, slug):
-        category = self.get_object()
-        serializer = CategorySerializer(category)
-        category.delete()
-        return Response(serializer.data, status=status.HTTP_204_NO_CONTENT)
 
 
-class GenreViewSet(viewsets.ModelViewSet):
+class GenreViewSet(ListCreateDestroy):
     queryset = Genre.objects.all()
     serializer_class = GenreSerializer
-    permission_classes = [IsRoleAdmin | ReadOnly]
-    filter_backends = (filters.SearchFilter,)
-    search_fields = ('^name',)
-    pagination_class = LimitOffsetPagination
-
-    @action(
-        detail=False, methods=['delete'],
-        url_path=r'(?P<slug>\w+)',
-        lookup_field='slug', url_name='genre_slug'
-    )
-    def get_genre(self, request, slug):
-        genre = self.get_object()
-        serializer = GenreSerializer(genre)
-        genre.delete()
-        return Response(serializer.data, status=status.HTTP_204_NO_CONTENT)
 
 
 class Round0(Func):
