@@ -113,7 +113,7 @@ class ListCreateDestroy(
     )
     def get_genre_or_category(self, request, slug):
         object = self.get_object()
-        if object is Genre:
+        if isinstance(object, Genre):
             serializer = GenreSerializer(object)
         serializer = CategorySerializer(object)
         object.delete()
