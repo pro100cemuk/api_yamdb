@@ -4,7 +4,7 @@ from django.core.mail import send_mail
 from django.db.models import Avg, Func
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import filters, status, viewsets, serializers
+from rest_framework import filters, serializers, status, viewsets
 from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.permissions import AllowAny, IsAuthenticated

@@ -1,9 +1,8 @@
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
-from rest_framework.validators import UniqueValidator
 
-from reviews.models import Category, Comments, Genre, Review, Title, User
 from api.validators import validate_username
+from reviews.models import Category, Comments, Genre, Review, Title, User
 
 User = get_user_model()
 
@@ -108,13 +107,6 @@ class ReviewsSerializer(serializers.ModelSerializer):
                 'Вы уже написали отзыв к этому произведению.'
             )
         return data
-
-    def validate_score(self, value):
-        if not 1 <= value <= 10:
-            raise serializers.ValidationError(
-                'Оценкой может быть целое число в диапазоне от 1 до 10.'
-            )
-        return value
 
 
 class CommentsSerializer(serializers.ModelSerializer):

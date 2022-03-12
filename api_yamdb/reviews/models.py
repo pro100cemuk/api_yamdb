@@ -2,9 +2,8 @@ import datetime as dt
 from django.contrib.auth.models import AbstractUser
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
-from rest_framework import permissions
 
-from api.validators import validate_username, validate_year
+from api.validators import validate_username, validate_year, validate_score
 
 
 class UserRole:
@@ -150,7 +149,8 @@ class Review(models.Model):
     score = models.PositiveIntegerField(
         validators=[
             MinValueValidator(1, message='Оценка должна быть > 0!'),
-            MaxValueValidator(10, message='Оценка должна быть <= 10')
+            MaxValueValidator(10, message='Оценка должна быть <= 10'),
+            validate_score
         ]
     )
     pub_date = models.DateTimeField(
