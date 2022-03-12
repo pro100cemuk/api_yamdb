@@ -17,3 +17,11 @@ def validate_year(value):
             'Проверьте год создания произведения (должен быть нашей эры).'
         )
     return value
+
+
+def validate_score(value):
+    if not 1 <= value <= 10:
+        raise ValidationError(
+            'Оценкой может быть целое число в диапазоне от 1 до 10.'
+        )
+    return value
