@@ -14,7 +14,7 @@ from rest_framework_simplejwt.tokens import AccessToken
 from api_yamdb.settings import ADMIN_EMAIL
 from reviews.models import Category, Genre, Review, Title
 from .filters import TitleFilter
-from .permissions import (IsAuthorOrReadOnly, IsRoleAdmin, IsRoleModerator,
+from .permissions import (IsAuthorAdminModeratorOrReadOnly, IsRoleAdmin,
                           ReadOnly)
 from .serializers import (AdminUserSerializer, CategorySerializer,
                           CommentsSerializer, GenreSerializer,
@@ -156,7 +156,7 @@ class TitlesViewSet(viewsets.ModelViewSet):
 
 class ReviewsViewSet(viewsets.ModelViewSet):
     serializer_class = ReviewsSerializer
-    permission_classes = [IsAuthorOrReadOnly | IsRoleModerator | IsRoleAdmin]
+    permission_classes = [IsAuthorAdminModeratorOrReadOnly]
 
     def perform_create(self, serializer):
         title = get_object_or_404(Title, pk=int(self.kwargs.get('title_id')))
@@ -169,7 +169,7 @@ class ReviewsViewSet(viewsets.ModelViewSet):
 
 class CommentsViewSet(viewsets.ModelViewSet):
     serializer_class = CommentsSerializer
-    permission_classes = [IsAuthorOrReadOnly | IsRoleModerator | IsRoleAdmin]
+    permission_classes = [IsAuthorAdminModeratorOrReadOnly]
 
     def perform_create(self, serializer):
         review = get_object_or_404(
