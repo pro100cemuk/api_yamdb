@@ -2,6 +2,7 @@ import datetime as dt
 from django.contrib.auth.models import AbstractUser
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
+from rest_framework import permissions
 
 from api.validators import validate_username, validate_year
 
@@ -49,7 +50,7 @@ class User(AbstractUser):
 
     @property
     def is_admin(self):
-        return self.role == UserRole.ADMIN
+        return self.is_staff or self.role == UserRole.ADMIN
 
     @property
     def is_moderator(self):
