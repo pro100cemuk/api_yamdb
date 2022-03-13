@@ -115,7 +115,8 @@ class ListCreateDestroy(
         object = self.get_object()
         if isinstance(object, Genre):
             serializer = GenreSerializer(object)
-        serializer = CategorySerializer(object)
+        else:
+            serializer = CategorySerializer(object)
         object.delete()
         return Response(serializer.data, status=status.HTTP_204_NO_CONTENT)
 
