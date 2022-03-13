@@ -55,10 +55,6 @@ class User(AbstractUser):
     def is_moderator(self):
         return self.role == UserRole.MODERATOR
 
-    @property
-    def is_user(self):
-        return self.role == UserRole.USER
-
 
 class Category(models.Model):
     name = models.CharField('Название', max_length=256)
