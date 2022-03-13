@@ -104,7 +104,6 @@ class ListCreateDestroy(
     permission_classes = [IsRoleAdmin | ReadOnly]
     filter_backends = (filters.SearchFilter,)
     search_fields = ('^name',)
-    pagination_class = LimitOffsetPagination
 
     @action(
         detail=False, methods=['delete'],
@@ -142,7 +141,6 @@ class TitlesViewSet(viewsets.ModelViewSet):
     permission_classes = [IsRoleAdmin | ReadOnly]
     filter_backends = (DjangoFilterBackend,)
     filterset_class = TitleFilter
-    pagination_class = LimitOffsetPagination
 
     def get_serializer_class(self):
         if self.request.method in ('POST', 'PATCH',):
